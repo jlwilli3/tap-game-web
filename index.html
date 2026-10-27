@@ -64,6 +64,18 @@
     }
     .title-pulse { animation: titlePulse 1.6s ease-in-out infinite; }
     .select-copy { -webkit-user-select: text; user-select: text; }
+    a.kofi-button {
+      background-color: #ff2eb8 !important;
+      box-shadow: 0 0 16px rgba(255, 46, 184, 0.65) !important;
+    }
+    a.kofi-button img.kofiimg {
+      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 64'%3E%3Cellipse cx='18' cy='7' rx='12' ry='4.5' fill='%23d9d9de'/%3E%3Cpath d='M6 8h24v46c0 3.2-5.4 6-12 6s-12-2.8-12-6V8z' fill='%23f7f7f8'/%3E%3Cpath d='M6 8h24v7H6z' fill='%23ececf0'/%3E%3Cpath d='M11 27c1.1 6 1.8 12 .5 18' stroke='%23111111' stroke-width='2.3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M17 22c1.3 7 2 14 .3 22' stroke='%23111111' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M23 27c1 5.4 1.6 10.5.4 16' stroke='%232f9e4a' stroke-width='2.3' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='18' cy='56' rx='12' ry='4.2' fill='%23c8c8ce'/%3E%3C/svg%3E") !important;
+      width: 13px !important;
+      height: 22px !important;
+      margin-right: 7px !important;
+      margin-bottom: 1px !important;
+    }
+    a.kofi-button .kofiimg::after { content: none !important; }
   </style>
 </head>
 <body class="bg-[#05050f] text-white">
@@ -129,9 +141,14 @@
             <figcaption class="font-hud text-[11px] font-bold text-white/70">ARC</figcaption>
           </figure>
         </div>
-        <p class="px-2 text-sm font-medium text-white/65">Unlock neon player skins with a one-tap checkout.</p>
-        <a id="unlock-link" class="block w-full rounded-2xl bg-[#ff2eb8] px-4 py-4 font-arcade text-base font-extrabold tracking-[2px] text-[#05050f] shadow-[0_0_16px_rgba(255,46,184,0.65)]" href="https://buy.stripe.com/test_TapGameUnlockSkins" target="_blank" rel="noopener noreferrer">UNLOCK SKINS</a>
-        <p id="stripe-url" class="select-copy break-all px-1 text-center font-hud text-[11px] font-medium text-[#1ff5fa]/80">https://buy.stripe.com/test_TapGameUnlockSkins</p>
+        <p class="px-2 text-sm font-medium text-white/65">Support TapGame and unlock the neon skins.</p>
+        <div class="flex justify-center">
+          <script src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
+          <script>
+            kofiwidget2.init("Buy me a Monster", "#ff2eb8", "H6V529LERC");
+            kofiwidget2.draw();
+          </script>
+        </div>
       </div>
     </div>
   </div>
@@ -144,7 +161,6 @@
       violet: "#8c47ff",
       gold: "#ffd647",
       floor: "#0a0a17",
-      stripePaymentLinkText: "https://buy.stripe.com/test_TapGameUnlockSkins",
       highScoreKey: "tapgame.highScore",
       gravity: 2450,
       jumpSpeed: 820,
