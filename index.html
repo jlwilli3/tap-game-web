@@ -64,9 +64,20 @@
     }
     .title-pulse { animation: titlePulse 1.6s ease-in-out infinite; }
     .select-copy { -webkit-user-select: text; user-select: text; }
+    .menu-kofi,
+    .menu-kofi .btn-container,
+    .menu-kofi a.kofi-button {
+      width: 100%;
+    }
+    .menu-kofi .btn-container { display: block !important; }
     a.kofi-button {
       background-color: #ff2eb8 !important;
       box-shadow: 0 0 16px rgba(255, 46, 184, 0.65) !important;
+      display: block !important;
+      box-sizing: border-box;
+      border-radius: 16px !important;
+      line-height: 54px !important;
+      font-size: 16px !important;
     }
     a.kofi-button img.kofiimg {
       content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 64'%3E%3Cellipse cx='18' cy='7' rx='12' ry='4.5' fill='%23d9d9de'/%3E%3Cpath d='M6 8h24v46c0 3.2-5.4 6-12 6s-12-2.8-12-6V8z' fill='%23f7f7f8'/%3E%3Cpath d='M6 8h24v7H6z' fill='%23ececf0'/%3E%3Cpath d='M11 27c1.1 6 1.8 12 .5 18' stroke='%23111111' stroke-width='2.3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M17 22c1.3 7 2 14 .3 22' stroke='%23111111' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M23 27c1 5.4 1.6 10.5.4 16' stroke='%232f9e4a' stroke-width='2.3' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='18' cy='56' rx='12' ry='4.2' fill='%23c8c8ce'/%3E%3C/svg%3E") !important;
@@ -102,7 +113,13 @@
       </div>
       <div class="flex w-full max-w-sm flex-col gap-3.5">
         <button id="start-btn" type="button" class="w-full rounded-2xl border-[1.6px] border-[#1ff5fa] bg-[#1ff5fa]/15 px-4 py-4 font-arcade text-[17px] font-extrabold tracking-[2.2px] text-white shadow-[0_0_12px_rgba(31,245,250,0.55)]">START GAME</button>
-        <button id="shop-btn" type="button" class="w-full rounded-2xl border-[1.6px] border-[#ff2eb8] bg-[#ff2eb8]/15 px-4 py-4 font-arcade text-[17px] font-extrabold tracking-[2.2px] text-white shadow-[0_0_12px_rgba(255,46,184,0.55)]">UNLOCK SKINS</button>
+        <div class="menu-kofi w-full">
+          <script src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
+          <script>
+            kofiwidget2.init("Buy me a Monster", "#ff2eb8", "H6V529LERC");
+            kofiwidget2.draw();
+          </script>
+        </div>
       </div>
     </div>
     <p class="font-hud text-sm font-bold text-[#ffd647]/90">BEST  <span id="menu-best">0</span></p>
@@ -119,39 +136,6 @@
       <button id="menu-btn" type="button" class="w-full rounded-2xl border-[1.6px] border-[#8c47ff] bg-[#8c47ff]/15 px-4 py-4 font-arcade text-[17px] font-extrabold tracking-[2.2px] text-white shadow-[0_0_12px_rgba(140,71,255,0.55)]">MAIN MENU</button>
     </div>
   </section>
-
-  <div id="shop" class="fixed inset-0 z-30 hidden items-end justify-center bg-black/55 sm:items-center" hidden role="dialog" aria-modal="true" aria-labelledby="shop-title">
-    <div class="max-h-[90dvh] w-full overflow-y-auto rounded-t-[28px] border border-white/10 bg-[#05050f] px-7 pb-[max(28px,env(safe-area-inset-bottom))] pt-4 shadow-2xl sm:mb-6 sm:max-w-md sm:rounded-[28px]">
-      <div class="flex justify-end">
-        <button id="shop-close" type="button" class="font-hud text-sm font-semibold text-[#1ff5fa]">Close</button>
-      </div>
-      <div class="space-y-6 pb-2 pt-1 text-center">
-        <h2 id="shop-title" class="font-arcade text-[22px] font-black tracking-[3px] text-[#ff2eb8]">PREMIUM SKINS</h2>
-        <div class="flex items-end justify-center gap-4">
-          <figure class="space-y-2">
-            <div class="mx-auto h-16 w-16 rounded-[10px] bg-[#1ff5fa] shadow-[0_0_12px_rgba(31,245,250,0.8)]"></div>
-            <figcaption class="font-hud text-[11px] font-bold text-white/70">ION</figcaption>
-          </figure>
-          <figure class="space-y-2">
-            <div class="mx-auto h-16 w-16 rounded-[10px] bg-[#ff2eb8] shadow-[0_0_12px_rgba(255,46,184,0.8)]"></div>
-            <figcaption class="font-hud text-[11px] font-bold text-white/70">PULSE</figcaption>
-          </figure>
-          <figure class="space-y-2">
-            <div class="mx-auto h-16 w-16 rounded-[10px] bg-[#ffd647] shadow-[0_0_12px_rgba(255,214,71,0.8)]"></div>
-            <figcaption class="font-hud text-[11px] font-bold text-white/70">ARC</figcaption>
-          </figure>
-        </div>
-        <p class="px-2 text-sm font-medium text-white/65">Support TapGame and unlock the neon skins.</p>
-        <div class="flex justify-center">
-          <script src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
-          <script>
-            kofiwidget2.init("Buy me a Monster", "#ff2eb8", "H6V529LERC");
-            kofiwidget2.draw();
-          </script>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <script>
     const Arcade = {
@@ -174,7 +158,6 @@
     const hudEl = document.getElementById("hud");
     const menuEl = document.getElementById("menu");
     const gameOverEl = document.getElementById("gameover");
-    const shopEl = document.getElementById("shop");
     const scoreEl = document.getElementById("score-value");
     const bestEl = document.getElementById("best-value");
     const menuBestEl = document.getElementById("menu-best");
@@ -598,21 +581,6 @@
     document.getElementById("start-btn").addEventListener("click", startGame);
     document.getElementById("again-btn").addEventListener("click", startGame);
     document.getElementById("menu-btn").addEventListener("click", returnToMenu);
-    document.getElementById("shop-btn").addEventListener("click", () => {
-      shopEl.classList.remove("hidden");
-      shopEl.classList.add("flex");
-      shopEl.hidden = false;
-    });
-    document.getElementById("shop-close").addEventListener("click", closeShop);
-    shopEl.addEventListener("click", (event) => {
-      if (event.target === shopEl) closeShop();
-    });
-
-    function closeShop() {
-      shopEl.classList.add("hidden");
-      shopEl.classList.remove("flex");
-      shopEl.hidden = true;
-    }
 
     document.addEventListener("keydown", (event) => {
       if (event.code !== "Space" && event.key !== " ") return;
