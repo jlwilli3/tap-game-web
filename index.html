@@ -74,6 +74,7 @@
       <p class="font-hud text-[10px] font-bold tracking-[2.4px] text-[#1ff5fa]/70">SCORE</p>
       <p id="score-value" class="font-hud text-[28px] font-extrabold leading-none text-[#1ff5fa] [text-shadow:0_0_8px_rgba(31,245,250,0.8)]">0</p>
     </div>
+    <p id="shield-label" class="absolute left-1/2 top-[max(34px,calc(env(safe-area-inset-top)+16px))] hidden -translate-x-1/2 rounded-full border border-[#ffd647]/45 bg-[#05050f]/70 px-3 py-1 font-hud text-[11px] font-bold tracking-[3px] text-[#ffd647] shadow-[0_0_14px_rgba(255,214,71,0.45)]" hidden>SHIELD ACTIVE</p>
     <div class="rounded-[14px] border border-[#ffd647]/35 bg-white/5 px-3.5 py-2 text-right shadow-[0_0_16px_rgba(255,214,71,0.12)] backdrop-blur-md">
       <p class="font-hud text-[10px] font-bold tracking-[2.4px] text-[#ffd647]/70">BEST</p>
       <p id="best-value" class="font-hud text-[28px] font-extrabold leading-none text-[#ffd647] [text-shadow:0_0_8px_rgba(255,214,71,0.8)]">0</p>
@@ -163,18 +164,24 @@
     const menuBestEl = document.getElementById("menu-best");
     const overScoreEl = document.getElementById("over-score");
     const overBestEl = document.getElementById("over-best");
+    const shieldEl = document.getElementById("shield-label");
 
     const engine = {
       screen: "menu",
       playerY: 0,
       velocity: 0,
       obstacles: [],
+      powerUps: [],
       score: 0,
       highScore: readHighScore(),
       flash: 0,
+      collectFlash: 0,
+      shield: false,
       lastTime: null,
       spawnAccumulator: 0,
-      nextSpawn: 1.35
+      nextSpawn: 1.35,
+      powerAccumulator: 0,
+      nextPower: 3.2
     };
 
     let viewW = 1;
@@ -215,17 +222,25 @@
       gameOverEl.classList.toggle("hidden", !overOn);
       gameOverEl.classList.toggle("flex", overOn);
       gameOverEl.hidden = !overOn;
+      const shieldOn = engine.shield && engine.screen === "playing";
+      shieldEl.classList.toggle("hidden", !shieldOn);
+      shieldEl.hidden = !shieldOn;
     }
 
     function startGame() {
       engine.playerY = 0;
       engine.velocity = 0;
       engine.obstacles = [];
+      engine.powerUps = [];
       engine.score = 0;
       engine.flash = 0;
+      engine.collectFlash = 0;
+      engine.shield = false;
       engine.lastTime = null;
       engine.spawnAccumulator = 0;
       engine.nextSpawn = 1.25;
+      engine.powerAccumulator = 0;
+      engine.nextPower = randomBetween(2.4, 4.2);
       engine.screen = "playing";
       haptic(12);
       syncUI();
@@ -234,6 +249,51 @@
     function returnToMenu() {
       engine.screen = "menu";
       engine.lastTime = null;
+      engine.shield = false;
+      engine.powerUps = [];
+      engine.collectFlash = 0;
+      syncUI();
+    }
+
+    function playerScale() {
+      return engine.shield ? 1.5 : 1;
+    }
+
+    function playerHitRect(groundY) {
+      const ps = Arcade.playerSize * playerScale();
+      const inset = 6 * playerScale();
+      return {
+        x: Arcade.playerX + inset,
+        y: groundY - ps - engine.playerY + inset,
+        w: ps - inset * 2,
+        h: ps - inset * 2
+      };
+    }
+
+    function obstacleRect(obstacle, groundY) {
+      return {
+        x: obstacle.x,
+        y: groundY - obstacle.height,
+        w: obstacle.width,
+        h: obstacle.height
+      };
+    }
+
+    function activateShield(groundY) {
+      engine.shield = true;
+      engine.collectFlash = 1;
+      const rect = playerHitRect(groundY);
+      for (const obstacle of engine.obstacles) {
+        if (rectsOverlap(rect, obstacleRect(obstacle, groundY))) obstacle.shieldSafe = true;
+      }
+      haptic(10);
+      syncUI();
+    }
+
+    function breakShield() {
+      engine.shield = false;
+      engine.collectFlash = 0.55;
+      haptic(16);
       syncUI();
     }
 
@@ -274,6 +334,7 @@
       if (dt <= 0) return;
 
       engine.flash = Math.max(0, engine.flash - dt * 3.2);
+      engine.collectFlash = Math.max(0, engine.collectFlash - dt * 4.2);
       engine.velocity -= Arcade.gravity * dt;
       engine.playerY += engine.velocity * dt;
       if (engine.playerY < 0) {
@@ -294,13 +355,43 @@
         });
       }
 
+      engine.powerAccumulator += dt;
+      if (engine.powerAccumulator >= engine.nextPower) {
+        engine.powerAccumulator = 0;
+        engine.nextPower = randomBetween(4.6, 8.2);
+        const spawnX = size.width + 80;
+        const crowded = engine.obstacles.some((obstacle) => Math.abs(obstacle.x - spawnX) < 96);
+        if (crowded) {
+          engine.powerAccumulator = engine.nextPower - 0.4;
+        } else {
+          engine.powerUps.push({
+            x: spawnX,
+            lift: randomBetween(36, 78),
+            radius: 16
+          });
+        }
+      }
+
       const groundY = size.height - Arcade.groundInset;
-      const playerRect = {
-        x: Arcade.playerX + 6,
-        y: groundY - Arcade.playerSize - engine.playerY + 6,
-        w: Arcade.playerSize - 12,
-        h: Arcade.playerSize - 12
-      };
+      let playerRect = playerHitRect(groundY);
+
+      const keptPower = [];
+      for (const star of engine.powerUps) {
+        star.x -= speed * dt;
+        const starRect = {
+          x: star.x - star.radius,
+          y: groundY - star.lift - star.radius,
+          w: star.radius * 2,
+          h: star.radius * 2
+        };
+        if (rectsOverlap(playerRect, starRect)) {
+          activateShield(groundY);
+          playerRect = playerHitRect(groundY);
+          continue;
+        }
+        if (star.x + star.radius > -40) keptPower.push(star);
+      }
+      engine.powerUps = keptPower;
 
       const next = [];
       for (const obstacle of engine.obstacles) {
@@ -312,6 +403,12 @@
           h: obstacle.height
         };
         if (rectsOverlap(playerRect, rect)) {
+          if (engine.shield) {
+            if (obstacle.shieldSafe) continue;
+            breakShield();
+            playerRect = playerHitRect(groundY);
+            continue;
+          }
           gameOver();
           return;
         }
@@ -337,6 +434,34 @@
       ctx.roundRect(x, y, w, h, r);
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
+      ctx.stroke();
+    }
+
+    function drawStar(cx, cy, radius) {
+      const pulse = 0.86 + Math.sin(performance.now() / 170) * 0.14;
+      const outer = radius * pulse;
+      const inner = outer * 0.46;
+      ctx.save();
+      ctx.filter = "blur(12px)";
+      ctx.fillStyle = "rgba(255, 214, 71, 0.8)";
+      ctx.beginPath();
+      ctx.arc(cx, cy, outer * 1.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 === 0 ? outer : inner;
+        const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = Arcade.gold;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.82)";
+      ctx.lineWidth = 1.3;
       ctx.stroke();
     }
 
@@ -410,16 +535,27 @@
         strokeRound(x, y, obstacle.width, obstacle.height, 5, "rgba(255,255,255,0.55)", 1.2);
       }
 
+      for (const star of engine.powerUps) {
+        drawStar(star.x, groundY - star.lift, star.radius);
+      }
+
+      const ps = Arcade.playerSize * playerScale();
       const px = Arcade.playerX;
-      const py = groundY - Arcade.playerSize - engine.playerY;
-      const ps = Arcade.playerSize;
+      const py = groundY - ps - engine.playerY;
+      const glow = engine.shield ? "rgba(255, 214, 71, 0.72)" : "rgba(31, 245, 250, 0.7)";
+      const stroke = engine.shield ? "rgba(255, 214, 71, 0.95)" : "rgba(255,255,255,0.8)";
       ctx.save();
       ctx.filter = "blur(16px)";
-      fillRound(px - 8, py - 8, ps + 16, ps + 16, 10, "rgba(31, 245, 250, 0.7)");
+      fillRound(px - 8, py - 8, ps + 16, ps + 16, 10, glow);
       ctx.restore();
       fillRound(px, py, ps, ps, 8, Arcade.cyan);
-      strokeRound(px, py, ps, ps, 8, "rgba(255,255,255,0.8)", 1.4);
-      fillRound(px + 8, py + 10, 22, 8, 2, "rgba(5, 5, 15, 0.55)");
+      strokeRound(px, py, ps, ps, 8, stroke, engine.shield ? 2.2 : 1.4);
+      fillRound(px + ps * (8 / 38), py + ps * (10 / 38), ps * (22 / 38), ps * (8 / 38), 2, "rgba(5, 5, 15, 0.55)");
+
+      if (engine.collectFlash > 0) {
+        ctx.fillStyle = "rgba(255, 214, 71, " + (engine.collectFlash * 0.22) + ")";
+        ctx.fillRect(0, 0, w, h);
+      }
 
       if (engine.flash > 0) {
         ctx.fillStyle = "rgba(255, 46, 184, " + (engine.flash * 0.35) + ")";
