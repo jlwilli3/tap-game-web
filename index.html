@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#05050f">
+  <meta name="color-scheme" content="dark">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TapGame">
+  <meta name="application-name" content="TapGame">
+  <meta name="description" content="TapGame — endless neon runner. Tap or press space to jump.">
+  <title>TapGame</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="icon" href="/icon-512.png" sizes="512x512" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/apple-splash-1320x2868.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/apple-splash-1206x2622.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/apple-splash-1290x2796.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/apple-splash-1179x2556.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/apple-splash-1284x2778.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/apple-splash-1170x2532.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/apple-splash-1125x2436.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/apple-splash-1242x2688.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/apple-splash-828x1792.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/apple-splash-1242x2208.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/apple-splash-750x1334.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/apple-splash-640x1136.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { color-scheme: dark; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #05050f;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    canvas { display: block; touch-action: none; }
+    .font-arcade {
+      font-family: ui-rounded, "Arial Rounded MT Bold", "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+    }
+    .font-hud {
+      font-family: ui-monospace, "SF Mono", "Andale Mono", Menlo, Consolas, monospace;
+    }
+    .neon-title {
+      background: linear-gradient(90deg, #1ff5fa, #ff2eb8, #8c47ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    @keyframes titlePulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(255, 46, 184, 0.7)); }
+      50% { transform: scale(1.03); filter: drop-shadow(0 0 22px rgba(255, 46, 184, 0.7)); }
+    }
+    .title-pulse { animation: titlePulse 1.6s ease-in-out infinite; }
+    .select-copy { -webkit-user-select: text; user-select: text; }
+  </style>
+</head>
+<body class="bg-[#05050f] text-white">
+  <canvas id="arena" class="fixed inset-0 h-full w-full" aria-hidden="true"></canvas>
+
+  <header id="hud" class="pointer-events-none fixed inset-x-0 top-0 z-10 flex items-start justify-between px-[22px] pt-[max(18px,env(safe-area-inset-top))] opacity-55">
+    <div class="rounded-[14px] border border-[#1ff5fa]/35 bg-white/5 px-3.5 py-2 shadow-[0_0_16px_rgba(31,245,250,0.12)] backdrop-blur-md">
+      <p class="font-hud text-[10px] font-bold tracking-[2.4px] text-[#1ff5fa]/70">SCORE</p>
+      <p id="score-value" class="font-hud text-[28px] font-extrabold leading-none text-[#1ff5fa] [text-shadow:0_0_8px_rgba(31,245,250,0.8)]">0</p>
+    </div>
+    <div class="rounded-[14px] border border-[#ffd647]/35 bg-white/5 px-3.5 py-2 text-right shadow-[0_0_16px_rgba(255,214,71,0.12)] backdrop-blur-md">
+      <p class="font-hud text-[10px] font-bold tracking-[2.4px] text-[#ffd647]/70">BEST</p>
+      <p id="best-value" class="font-hud text-[28px] font-extrabold leading-none text-[#ffd647] [text-shadow:0_0_8px_rgba(255,214,71,0.8)]">0</p>
+    </div>
+  </header>
+
+  <section id="menu" class="fixed inset-0 z-20 flex flex-col items-center justify-between bg-gradient-to-b from-[#05050f]/15 to-[#05050f]/70 px-9 pb-[max(36px,env(safe-area-inset-bottom))] pt-24">
+    <div class="flex flex-1 flex-col items-center justify-center gap-7 text-center">
+      <div class="space-y-2.5">
+        <h1 class="title-pulse neon-title font-arcade text-[52px] font-black leading-none tracking-[8px]">TAPGAME</h1>
+        <p class="font-hud text-[13px] font-semibold tracking-[4px] text-[#1ff5fa]/75">ENDLESS NEON RUN</p>
+        <p class="pt-1 font-hud text-[11px] font-medium text-white/45">TAP ANYWHERE TO JUMP</p>
+      </div>
+      <div class="flex w-full max-w-sm flex-col gap-3.5">
+        <button id="start-btn" type="button" class="w-full rounded-2xl border-[1.6px] border-[#1ff5fa] bg-[#1ff5fa]/15 px-4 py-4 font-arcade text-[17px] font-extrabold tracking-[2.2px] text-white shadow-[0_0_12px_rgba(31,245,250,0.55)]">START GAME</button>
+        <button id="shop-btn" type="button" class="w-full rounded-2xl border-[1.6px] border-[#ff2eb8] bg-[#ff2eb8]/15 px-4 py-4 font-arcade text-[17px] font-extrabold tracking-[2.2px] text-white shadow-[0_0_12px_rgba(255,46,184,0.55)]">UNLOCK SKINS</button>
+      </div>
+    </div>
+    <p class="font-hud text-sm font-bold text-[#ffd647]/90">BEST  <span id="menu-best">0</span></p>
+  </section>
+
+  <section id="gameover" class="fixed inset-0 z-20 hidden flex-col items-center justify-center gap-[22px] bg-[#05050f]/55 px-10 pb-[env(safe-area-inset-bottom)]" hidden>
+    <h2 class="font-arcade text-4xl font-black tracking-[4px] text-[#ff2eb8] [text-shadow:0_0_16px_#ff2eb8]">GAME OVER</h2>
+    <div class="space-y-1.5 text-center">
+      <p class="font-hud text-[22px] font-bold text-[#1ff5fa]">SCORE  <span id="over-score">0</span></p>
+      <p class="font-hud text-base font-semibold text-[#ffd647]">BEST  <span id="over-best">0</span></p>
+    </div>
+    <div class="flex w-full max-w-sm flex-col gap-3">
+      <button id="again-btn" type="button" class="w-full rounded-2xl border-[1.6px] border-[#1ff5fa] bg-[#1ff5fa]/15 px-4 py-4 font-arcade text-[17px] font-extrabold tracking-[2.2px] text-white shadow-[0_0_12px_rgba(31,245,250,0.55)]">PLAY AGAIN</button>
+      <button id="menu-btn" type="button" class="w-full rounded-2xl border-[1.6px] border-[#8c47ff] bg-[#8c47ff]/15 px-4 py-4 font-arcade text-[17px] font-extrabold tracking-[2.2px] text-white shadow-[0_0_12px_rgba(140,71,255,0.55)]">MAIN MENU</button>
+    </div>
+  </section>
+
+  <div id="shop" class="fixed inset-0 z-30 hidden items-end justify-center bg-black/55 sm:items-center" hidden role="dialog" aria-modal="true" aria-labelledby="shop-title">
+    <div class="max-h-[90dvh] w-full overflow-y-auto rounded-t-[28px] border border-white/10 bg-[#05050f] px-7 pb-[max(28px,env(safe-area-inset-bottom))] pt-4 shadow-2xl sm:mb-6 sm:max-w-md sm:rounded-[28px]">
+      <div class="flex justify-end">
+        <button id="shop-close" type="button" class="font-hud text-sm font-semibold text-[#1ff5fa]">Close</button>
+      </div>
+      <div class="space-y-6 pb-2 pt-1 text-center">
+        <h2 id="shop-title" class="font-arcade text-[22px] font-black tracking-[3px] text-[#ff2eb8]">PREMIUM SKINS</h2>
+        <div class="flex items-end justify-center gap-4">
+          <figure class="space-y-2">
+            <div class="mx-auto h-16 w-16 rounded-[10px] bg-[#1ff5fa] shadow-[0_0_12px_rgba(31,245,250,0.8)]"></div>
+            <figcaption class="font-hud text-[11px] font-bold text-white/70">ION</figcaption>
+          </figure>
+          <figure class="space-y-2">
+            <div class="mx-auto h-16 w-16 rounded-[10px] bg-[#ff2eb8] shadow-[0_0_12px_rgba(255,46,184,0.8)]"></div>
+            <figcaption class="font-hud text-[11px] font-bold text-white/70">PULSE</figcaption>
+          </figure>
+          <figure class="space-y-2">
+            <div class="mx-auto h-16 w-16 rounded-[10px] bg-[#ffd647] shadow-[0_0_12px_rgba(255,214,71,0.8)]"></div>
+            <figcaption class="font-hud text-[11px] font-bold text-white/70">ARC</figcaption>
+          </figure>
+        </div>
+        <p class="px-2 text-sm font-medium text-white/65">Unlock neon player skins with a one-tap checkout.</p>
+        <a id="unlock-link" class="block w-full rounded-2xl bg-[#ff2eb8] px-4 py-4 font-arcade text-base font-extrabold tracking-[2px] text-[#05050f] shadow-[0_0_16px_rgba(255,46,184,0.65)]" href="https://buy.stripe.com/test_TapGameUnlockSkins" target="_blank" rel="noopener noreferrer">UNLOCK SKINS</a>
+        <p id="stripe-url" class="select-copy break-all px-1 text-center font-hud text-[11px] font-medium text-[#1ff5fa]/80">https://buy.stripe.com/test_TapGameUnlockSkins</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const Arcade = {
+      void: "#05050f",
+      pink: "#ff2eb8",
+      cyan: "#1ff5fa",
+      violet: "#8c47ff",
+      gold: "#ffd647",
+      floor: "#0a0a17",
+      stripePaymentLinkText: "https://buy.stripe.com/test_TapGameUnlockSkins",
+      highScoreKey: "tapgame.highScore",
+      gravity: 2450,
+      jumpSpeed: 820,
+      playerSize: 38,
+      groundInset: 86,
+      playerX: 92
+    };
+
+    const canvas = document.getElementById("arena");
+    const ctx = canvas.getContext("2d");
+    const hudEl = document.getElementById("hud");
+    const menuEl = document.getElementById("menu");
+    const gameOverEl = document.getElementById("gameover");
+    const shopEl = document.getElementById("shop");
+    const scoreEl = document.getElementById("score-value");
+    const bestEl = document.getElementById("best-value");
+    const menuBestEl = document.getElementById("menu-best");
+    const overScoreEl = document.getElementById("over-score");
+    const overBestEl = document.getElementById("over-best");
+
+    const engine = {
+      screen: "menu",
+      playerY: 0,
+      velocity: 0,
+      obstacles: [],
+      score: 0,
+      highScore: readHighScore(),
+      flash: 0,
+      lastTime: null,
+      spawnAccumulator: 0,
+      nextSpawn: 1.35
+    };
+
+    let viewW = 1;
+    let viewH = 1;
+
+    function readHighScore() {
+      try {
+        const n = Number.parseInt(localStorage.getItem(Arcade.highScoreKey) || "0", 10);
+        return Number.isFinite(n) && n > 0 ? n : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function writeHighScore(value) {
+      try {
+        localStorage.setItem(Arcade.highScoreKey, String(value));
+      } catch {
+        /* private mode or blocked storage */
+      }
+    }
+
+    function haptic(pattern) {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    }
+
+    function syncUI() {
+      scoreEl.textContent = String(engine.score);
+      bestEl.textContent = String(engine.highScore);
+      menuBestEl.textContent = String(engine.highScore);
+      overScoreEl.textContent = String(engine.score);
+      overBestEl.textContent = String(engine.highScore);
+      hudEl.style.opacity = engine.screen === "menu" ? "0.55" : "1";
+      const menuOn = engine.screen === "menu";
+      const overOn = engine.screen === "gameOver";
+      menuEl.classList.toggle("hidden", !menuOn);
+      menuEl.hidden = !menuOn;
+      gameOverEl.classList.toggle("hidden", !overOn);
+      gameOverEl.classList.toggle("flex", overOn);
+      gameOverEl.hidden = !overOn;
+    }
+
+    function startGame() {
+      engine.playerY = 0;
+      engine.velocity = 0;
+      engine.obstacles = [];
+      engine.score = 0;
+      engine.flash = 0;
+      engine.lastTime = null;
+      engine.spawnAccumulator = 0;
+      engine.nextSpawn = 1.25;
+      engine.screen = "playing";
+      haptic(12);
+      syncUI();
+    }
+
+    function returnToMenu() {
+      engine.screen = "menu";
+      engine.lastTime = null;
+      syncUI();
+    }
+
+    function jump() {
+      if (engine.screen !== "playing") return;
+      if (engine.playerY > 1) return;
+      engine.velocity = Arcade.jumpSpeed;
+      haptic(8);
+    }
+
+    function gameOver() {
+      engine.screen = "gameOver";
+      engine.flash = 1;
+      if (engine.score > engine.highScore) {
+        engine.highScore = engine.score;
+        writeHighScore(engine.highScore);
+      }
+      haptic([24, 30, 40]);
+      syncUI();
+    }
+
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function randomBetween(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function tick(nowMs, size) {
+      if (engine.screen !== "playing" || size.width <= 0 || size.height <= 0) {
+        engine.lastTime = nowMs;
+        return;
+      }
+
+      const dt = Math.min(engine.lastTime == null ? 0 : (nowMs - engine.lastTime) / 1000, 1 / 30);
+      engine.lastTime = nowMs;
+      if (dt <= 0) return;
+
+      engine.flash = Math.max(0, engine.flash - dt * 3.2);
+      engine.velocity -= Arcade.gravity * dt;
+      engine.playerY += engine.velocity * dt;
+      if (engine.playerY < 0) {
+        engine.playerY = 0;
+        engine.velocity = 0;
+      }
+
+      const speed = 260 + Math.min(engine.score * 9.5, 280);
+      engine.spawnAccumulator += dt;
+      if (engine.spawnAccumulator >= engine.nextSpawn) {
+        engine.spawnAccumulator = 0;
+        engine.nextSpawn = Math.max(0.72, 1.38 - engine.score * 0.028);
+        engine.obstacles.push({
+          x: size.width + 40,
+          width: randomBetween(28, 44),
+          height: randomBetween(34, 78),
+          scored: false
+        });
+      }
+
+      const groundY = size.height - Arcade.groundInset;
+      const playerRect = {
+        x: Arcade.playerX + 6,
+        y: groundY - Arcade.playerSize - engine.playerY + 6,
+        w: Arcade.playerSize - 12,
+        h: Arcade.playerSize - 12
+      };
+
+      const next = [];
+      for (const obstacle of engine.obstacles) {
+        obstacle.x -= speed * dt;
+        const rect = {
+          x: obstacle.x,
+          y: groundY - obstacle.height,
+          w: obstacle.width,
+          h: obstacle.height
+        };
+        if (rectsOverlap(playerRect, rect)) {
+          gameOver();
+          return;
+        }
+        if (!obstacle.scored && obstacle.x + obstacle.width < Arcade.playerX) {
+          obstacle.scored = true;
+          engine.score += 1;
+          syncUI();
+        }
+        if (obstacle.x + obstacle.width > -40) next.push(obstacle);
+      }
+      engine.obstacles = next;
+    }
+
+    function fillRound(x, y, w, h, r, color) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function strokeRound(x, y, w, h, r, color, width) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.stroke();
+    }
+
+    function fillEllipseIn(x, y, w, h) {
+      ctx.beginPath();
+      ctx.ellipse(x + w / 2, y + h / 2, Math.abs(w) / 2, Math.abs(h) / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function draw(size) {
+      const w = size.width;
+      const h = size.height;
+      const groundY = h - Arcade.groundInset;
+
+      ctx.fillStyle = Arcade.void;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.filter = "blur(40px)";
+      ctx.fillStyle = "rgba(140, 71, 255, 0.22)";
+      fillEllipseIn(-80, -60, w * 0.7, 280);
+      ctx.fillStyle = "rgba(255, 46, 184, 0.12)";
+      fillEllipseIn(w * 0.35, 40, w * 0.8, 240);
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(31, 245, 250, 0.06)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= w; x += 36) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, groundY);
+      }
+      for (let y = 0; y <= groundY; y += 36) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+      }
+      ctx.stroke();
+
+      ctx.save();
+      ctx.filter = "blur(8px)";
+      ctx.fillStyle = "rgba(31, 245, 250, 0.35)";
+      ctx.fillRect(0, groundY - 10, w, 20);
+      ctx.restore();
+
+      ctx.fillStyle = Arcade.floor;
+      ctx.fillRect(0, groundY, w, h - groundY);
+      ctx.beginPath();
+      ctx.strokeStyle = Arcade.cyan;
+      ctx.lineWidth = 3;
+      ctx.moveTo(0, groundY);
+      ctx.lineTo(w, groundY);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(255, 46, 184, 0.45)";
+      ctx.lineWidth = 1.5;
+      for (let x = 0; x <= w; x += 22) {
+        ctx.moveTo(x, groundY);
+        ctx.lineTo(x, groundY + 10);
+      }
+      ctx.stroke();
+
+      for (const obstacle of engine.obstacles) {
+        const x = obstacle.x;
+        const y = groundY - obstacle.height;
+        ctx.save();
+        ctx.filter = "blur(12px)";
+        fillRound(x - 4, y - 4, obstacle.width + 8, obstacle.height + 8, 6, "rgba(255, 46, 184, 0.55)");
+        ctx.restore();
+        fillRound(x, y, obstacle.width, obstacle.height, 5, Arcade.pink);
+        strokeRound(x, y, obstacle.width, obstacle.height, 5, "rgba(255,255,255,0.55)", 1.2);
+      }
+
+      const px = Arcade.playerX;
+      const py = groundY - Arcade.playerSize - engine.playerY;
+      const ps = Arcade.playerSize;
+      ctx.save();
+      ctx.filter = "blur(16px)";
+      fillRound(px - 8, py - 8, ps + 16, ps + 16, 10, "rgba(31, 245, 250, 0.7)");
+      ctx.restore();
+      fillRound(px, py, ps, ps, 8, Arcade.cyan);
+      strokeRound(px, py, ps, ps, 8, "rgba(255,255,255,0.8)", 1.4);
+      fillRound(px + 8, py + 10, 22, 8, 2, "rgba(5, 5, 15, 0.55)");
+
+      if (engine.flash > 0) {
+        ctx.fillStyle = "rgba(255, 46, 184, " + (engine.flash * 0.35) + ")";
+        ctx.fillRect(0, 0, w, h);
+      }
+    }
+
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      viewW = Math.max(1, window.innerWidth);
+      viewH = Math.max(1, window.innerHeight);
+      canvas.width = Math.round(viewW * dpr);
+      canvas.height = Math.round(viewH * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function frame(now) {
+      const size = { width: viewW, height: viewH };
+      tick(now, size);
+      draw(size);
+      requestAnimationFrame(frame);
+    }
+
+    document.getElementById("start-btn").addEventListener("click", startGame);
+    document.getElementById("again-btn").addEventListener("click", startGame);
+    document.getElementById("menu-btn").addEventListener("click", returnToMenu);
+    document.getElementById("shop-btn").addEventListener("click", () => {
+      shopEl.classList.remove("hidden");
+      shopEl.classList.add("flex");
+      shopEl.hidden = false;
+    });
+    document.getElementById("shop-close").addEventListener("click", closeShop);
+    shopEl.addEventListener("click", (event) => {
+      if (event.target === shopEl) closeShop();
+    });
+
+    function closeShop() {
+      shopEl.classList.add("hidden");
+      shopEl.classList.remove("flex");
+      shopEl.hidden = true;
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.code !== "Space" && event.key !== " ") return;
+      event.preventDefault();
+      if (event.repeat) return;
+      jump();
+    });
+
+    document.addEventListener("touchstart", (event) => {
+      if (engine.screen !== "playing") return;
+      event.preventDefault();
+      jump();
+    }, { passive: false });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "touch") return;
+      if (engine.screen !== "playing") return;
+      if (event.target.closest("button, a")) return;
+      jump();
+    });
+
+    window.addEventListener("resize", resize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", resize);
+    }
+
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+
+    resize();
+    syncUI();
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
